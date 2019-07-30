@@ -17,10 +17,25 @@ Redei_rec exp N first second = mod_ring_div N g h where
 			                                  | G  <- (drop`{0} work).0
 					                  | H  <- (drop`{0} work).1]
 
+/* TODO
+
 /* Compute the Redei rational function exploiting the recurrence described in
 "Fast evaluation of Redei functions", Willi More,
 Applicable Algebra in Engineering, Communication and Computing, 1995.*/
-// TODO
-   
+Redei : {K} (fin K, K >= 4) => [K] -> [K] -> [K] -> [K] -> [K]
+Redei exp N first second = redei' exp N first second (mrb exp) second
+  where
+    redei' e n b x i partial = if i<zero then partial else redei' e n b x (safe_sub i (1:[K])) partial'
+      where
+        partial' = if e@i == 1 then w2 b (w1 b partial) x else w1 b partial
+        w1 b R = mod_ring_div N ( mod_ring_add N (mod_ring_pow N R (2:[K])) b ) ( mod_ring_mul N R (2:[K]) )
+	w2 b R x = mod_ring_div N (mod_ring_add N (mod_ring_mul N R x) second ) (mod_ring_add N R x)
+
 CorrectRedei : {K} (fin K, K >= 4) => [K] -> [K] -> [K] -> [K] -> Bit
 property CorrectRedei exp N first second = ( test_quadratic_non_residual N first ) ==> Redei_rec exp N first second == Redei exp N first second
+
+private
+  mrb : {K} (fin K, K >= 4) => [K] -> [K]
+  mrb n = `(K)//TODO
+
+*/
