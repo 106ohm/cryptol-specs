@@ -65,7 +65,7 @@ is_invertible : {K} (fin K, K >= 2) => [K] -> [K] -> Bit
 is_invertible n x = gcd (toInteger n) (toInteger x) == 1
 
 test_quadratic_non_residual : {K} (fin K, K >= 2) => [K] -> [K] -> Bit
-test_quadratic_non_residual N D = True//TODO
+test_quadratic_non_residual N D = if jacobi D N == -1 then True else False
 
 CorrectDiv : {K} (fin K, K >= 2) => [K] -> [K] -> [K] -> Bit
 property CorrectDiv N u v = (is_invertible N v) ==> mod_ring_div N (mod_ring_mul N u v) v == u
