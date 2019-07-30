@@ -1,0 +1,22 @@
+/*
+ * Jacobi symbols
+ * Giulio Masetti, giulio.masetti@isti.cnr.it
+ * Distributed under the terms of the BSD3 license
+ */
+module Common::Jacobi where
+
+import Common::bv
+
+/* compute the jacobi symbol (a/n).
+   Notice that -1:[2] = 3:[2] */
+//jacobi : {K} (fin K, K >= 2) => [K] -> [K] -> [2]
+// TODO
+
+jacobi : Integer -> Integer -> Integer
+jacobi a n = if a == zero                                then if n == 1 then 1 else 0
+             |  (a == 2) && ( (n%8 == 1) || (n%8 == 7) ) then  1
+	     |  (a == 2) && ( (n%8 == 3) || (n%8 == 5) ) then -1
+	     |  a >= n                                   then jacobi (a%n) n
+	     |  a%2 == zero                              then (jacobi 2 n) * (jacobi (a/2) n)
+	     |  (a%4 == 3) && (n%4 == 3)                 then -1 * jacobi n a
+	     else jacobi n a

@@ -7,6 +7,8 @@ module Common::mod_ring_arith where
 
 import Common::bv
 
+import Common::Jacobi
+
 /* Add two numbers in normalized form. */
 mod_ring_add : {n} (fin n) => [n] -> [n] -> [n] -> [n]
 mod_ring_add N x y = if c1 || ~c2 then r2 else r1
