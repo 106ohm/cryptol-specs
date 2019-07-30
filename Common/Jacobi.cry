@@ -13,7 +13,9 @@ import Common::bv
 // TODO
 
 jacobi : Integer -> Integer -> Integer
-jacobi a n = if a == zero                                then if n == 1 then 1 else 0
+jacobi a n = if n%2 == zero                              then error "n must be odd"
+             |  a == zero                                then if n == 1 then 1 else 0
+             |  a == 1                                   then  1
              |  (a == 2) && ( (n%8 == 1) || (n%8 == 7) ) then  1
 	     |  (a == 2) && ( (n%8 == 3) || (n%8 == 5) ) then -1
 	     |  a >= n                                   then jacobi (a%n) n
