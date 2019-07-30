@@ -64,7 +64,7 @@ mod_ring_pow n x0 e0 = (results ! 0).2
 is_invertible : {K} (fin K, K >= 2) => [K] -> [K] -> Bit
 is_invertible n x = gcd (toInteger n) (toInteger x) == 1
 
-test_quadratic_non_residual : {K} (fin K, K >= 2) => [K] -> [K] -> Bit
+test_quadratic_non_residual : {K} (fin K, K >= 4) => [K] -> [K] -> Bit
 test_quadratic_non_residual N D = if jacobi D N == -1 then True else False
 
 CorrectDiv : {K} (fin K, K >= 2) => [K] -> [K] -> [K] -> Bit

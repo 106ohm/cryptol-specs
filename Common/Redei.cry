@@ -7,7 +7,7 @@ module Common::Redei where
 import Common::mod_ring_arith
 
 /* Compute the Redei rational function exploiting a well-known recurrence*/
-Redei_rec : {K} (fin K, K >= 2) => [K] -> [K] -> [K] -> [K] -> [K]
+Redei_rec : {K} (fin K, K >= 4) => [K] -> [K] -> [K] -> [K] -> [K]
 Redei_rec exp N first second = mod_ring_div N g h where
                               (g, h) = work @ (exp-1)
 	                      work = [ (second, 1:[K]) ]
@@ -21,7 +21,6 @@ Redei_rec exp N first second = mod_ring_div N g h where
 "Fast evaluation of Redei functions", Willi More,
 Applicable Algebra in Engineering, Communication and Computing, 1995.*/
 // TODO
-
-// TODO
-//CorrectRedei_std : {K} (fin K, K >= 2) => [K] -> [K] -> [K] -> [K] -> Bit
-//property CorrectRedei_std exp N first second = ( test_quadratic_non_residual N first ) ==> Redei_rec exp N first second == Redei exp N first second
+   
+CorrectRedei : {K} (fin K, K >= 4) => [K] -> [K] -> [K] -> [K] -> Bit
+property CorrectRedei exp N first second = ( test_quadratic_non_residual N first ) ==> Redei_rec exp N first second == Redei exp N first second
