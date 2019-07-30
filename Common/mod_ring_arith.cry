@@ -1,0 +1,73 @@
+/*
+ * Modular aritmetic in Z/nZ
+ * Giulio Masetti, giulio.masetti@isti.cnr.it
+ * Distributed under the terms of the BSD3 license
+ */
+module Common::mod_ring_arith where
+
+import Common::bv
+
+/* Add two numbers in normalized form. */
+mod_ring_add : {n} (fin n) => [n] -> [n] -> [n] -> [n]
+mod_ring_add N x y = if c1 || ~c2 then r2 else r1
+  where
+    (r1,c1) = adc( x, y)
+    (r2,c2) = sbb(r1, N)
+
+/* Subtract two numbers in normalized form. */
+mod_ring_sub : {n} (fin n) => [n] -> [n] -> [n] -> [n]
+mod_ring_sub N x y = if b then r2 else r1
+  where
+    (r1,b) = sbb( x, y)
+    (r2,_) = adc(r1, N)
+
+mod_ring_neg : {n} (fin n) => [n] -> [n] -> [n]
+mod_ring_neg N x = if x == 0 then 0 else (N - x)
+
+mod_ring_half : {n} (fin n, n >= 1) => [n] -> [n] -> [n]
+mod_ring_half N x = if even(x) then x >> 1
+                 else take(safe_add(x, N))
+  where even y = (y && 1) == 0
+
+/* Definition of modular multiplication. */
+mod_ring_mul : {n} (fin n) => [n] -> [n] -> [n] -> [n]
+mod_ring_mul N x y  = safe_mod(N, safe_product(x, y))
+
+/* Euler's binary gcd */
+egcd : {K} (fin K, K >= 2) => [K] -> [K] -> [K] -> [K] -> [K] -> [K]
+egcd n a ra b rb =
+  if b == 0 then
+    ra
+  else if ( (b && 1) == 0 ) && ~( (a && 1) == 0 ) then /* b is even, a is not */
+    egcd n a ra (b >> 1) (mod_ring_half n rb)
+  else if ~( (b && 1) == 0 ) && ( (a && 1) == 0 ) then /* a is even, b is not */
+    egcd n (a >> 1) (mod_ring_half n ra) b rb
+  else if ( (b && 1) == 0 ) && ( (a && 1) == 0 ) then /* a and b are both even */
+    mod_ring_mul n (2:[K]) (egcd n (a >> 1) (mod_ring_half n ra) (b >> 1) (mod_ring_half n rb))
+  else if a < b then /* a and b are both odd and a < b */
+    egcd n a ra ((b - a) >> 1) (mod_ring_half n (mod_ring_sub n rb ra))
+  else /* a and b are both odd and a >= b */
+    egcd n b rb ((a - b) >> 1) (mod_ring_half n (mod_ring_sub n ra rb))
+
+/* Implement x/y in Z/nZ using Euler's binary gcd */
+mod_ring_div : {K} (fin K, K >= 2) => [K] -> [K] -> [K] -> [K]
+mod_ring_div n x y = egcd n n 0 y x
+
+mod_ring_pow : {a} (fin a, a >= 2) => [a] -> [a] -> [a] -> [a]
+mod_ring_pow n x0 e0 = (results ! 0).2
+ where
+ results = [(x0,e0,1)] # [ (mod_ring_mul n x x, e>>1, if(e!0) then mod_ring_mul n result x else result)
+                                | (x,e,result) <- results | _ <- [0..a] :[_][width a] ]
+
+is_invertible : {K} (fin K, K >= 2) => [K] -> [K] -> Bit
+is_invertible n x = gcd (toInteger n) (toInteger x) == 1
+
+test_quadratic_non_residual : {K} (fin K, K >= 2) => [K] -> [K] -> Bit
+test_quadratic_non_residual N D = True//TODO
+
+CorrectDiv : {K} (fin K, K >= 2) => [K] -> [K] -> [K] -> Bit
+property CorrectDiv N u v = (is_invertible N v) ==> mod_ring_div N (mod_ring_mul N u v) v == u
+
+private
+  gcd : Integer -> Integer -> Integer
+  gcd a b = if b == zero then a else gcd b (a%b)

@@ -1,0 +1,61 @@
+/*
+ Bellini-Murru
+*/
+
+module Primitive::RSAlike::Cipher::BM where
+
+import Common::mod_ring_arith
+import Common::Redei
+
+// BM encrypt primitive:
+// public key: (N, e)
+// open message in parameters space: (D, M)
+// closed message in parameters space: (D, C)
+BMEP : {K} (fin K, K >= 2) => (([K],[K]),([K],[K])) -> ([K],[K])
+BMEP ((N,e),(D,M)) = (D, C)
+     where C = Redei_rec e N D M
+
+// BM decrypt primitive:
+// private key: (N, d)
+// closed message in parameters space: (D, C)
+// open message in parameters space: (D, M)
+BMDP : {K} (fin K, K >= 2) => (([K],[K]),([K],[K])) -> ([K],[K])
+BMDP ((N,d),(D,C)) = (D, M)
+     where M = Redei_rec d N D C
+
+// MB transform the open message from Pell hyperbola to parameters space
+// open message in Pell hyperbola: (Mx, My)
+// public key: (N, e)
+// open message in parameters space: (D, M)
+// where D=(Mx^2-1)/My^2 (mod N) and M= (Mx+1)/My (mod N)
+BMPELTPAR : {K} (fin K, K >= 2) => (([K],[K]),([K],[K])) -> ([K],[K])
+BMPELTPAR ((Mx,My),(N,e)) = if is_invertible N My then (D,M) else error "My is not invertible"
+  where
+    D = mod_ring_div N ( mod_ring_sub N (mod_ring_pow N Mx (2:[K])) (1:[K]) ) ( mod_ring_pow N My (2:[K]) )
+    M = if test_quadratic_non_residual N D then mod_ring_div N (mod_ring_add N Mx (1:[K]) ) My else error "D or -D are quadratic residual mod N"
+
+// BM transform the open message from parameters space to Pell hyperbola
+// open message in parameters space: (D, M)
+// public key: (N, e)
+// open message in Pell hyperbola: (Mx, My)
+// where Mx = (M^2+D)/(M^2-D) and My = 2*M/(M^2-D)
+BMPARTPEL : {K} (fin K, K >= 2) => (([K],[K]),([K],[K])) -> ([K],[K])
+BMPARTPEL ((D,M),(N,e)) = (Mx, My)
+  where
+    M2 = mod_ring_pow N M (2:[K])
+    M2mD = mod_ring_sub N M2 D
+    Mx = if is_invertible N M2mD
+         then mod_ring_div N ( mod_ring_add N M2 D ) M2mD
+	 else error "M^2-D is not invertible"
+    My = mod_ring_mul N (2:[K]) (mod_ring_div N M M2mD)
+
+// TODO: check preconditions
+BMCorrect : {K} (fin K, K >= 2) => [K] -> [K] -> [K] -> [K] -> [K] -> Bit
+property BMCorrect e d N Mx My = ( is_invertible N My && test_quadratic_non_residual N D ) ==> BMPARTPEL (BMDP ((N, d), BMEP ((N,e), BMPELTPAR ((Mx, My), (N,e)) ) ), (N, e))  == (Mx, My)
+  where
+    D = mod_ring_div N ( mod_ring_sub N (mod_ring_pow N Mx (2:[K])) (1:[K]) ) ( mod_ring_pow N My (2:[K]) )
+
+
+// Tests
+property handCheckedTest = [ BMPARTPEL (BMDP ((N, d), BMEP ((N,e), BMPELTPAR ((Mx, My), (N,e)) ) ), (N, e))  == (Mx, My) | (e, d, N, Mx, My) <- testVector ] == ~zero where
+  testVector = [(13, 13, 35, 2, 3)]
