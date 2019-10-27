@@ -1,5 +1,6 @@
 /*
- Bellini-Murru
+ Bellini-Murru based on "An efficient and secure RSA–like cryptosystem
+exploiting Redei rational functions over conics", arXiv:1511.03451v2
 */
 
 module Primitive::RSAlike::Cipher::BM where
